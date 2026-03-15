@@ -29,3 +29,24 @@ jobs:
 
       - name: Run Jest tests
         run: npx jest
+
+  # --- JOB 2: PRUEBAS DE CARGA (K6) ---
+  performance_test:
+    name: Ejecución de Pruebas de Carga
+    # Nota: Este job requiere que 'test' (o Analysis-SAST si lo tienes) finalice exitosamente
+    needs: test 
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Run k6 cloud test
+        uses: grafana/k6-action@v0.3.1
+        with:
+          filename: k6_pruebas.js
+          flags: --out cloud
+          # Implementación del secreto dinámico
+          token: ${{ secrets.K6_CLOUD_TOKEN }} 
+        env:
+          # Estrategia de doble validación para eliminar intermitencia
+          K6_CLOUD_TOKEN: ${{ secrets.K6_CLOUD_TOKEN }}
