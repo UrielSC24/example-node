@@ -10,7 +10,7 @@ export const options = {
     ],
     // Configuración para enviar métricas a Grafana Cloud
     cloud: {
-        projectID: 6868138, // Tu ID de proyecto exacto (tomado de tus capturas)
+        projectID: 6994623, // Tu ID de proyecto exacto (tomado de tus capturas)
         name: 'Prueba de Carga - Node.js API'
     }
 };
