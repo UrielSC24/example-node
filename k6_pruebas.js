@@ -18,7 +18,7 @@ export const options = {
 export default function loadTest() {
     // Apuntamos al puerto 3001, que es el que usa tu archivo bin/www
     // Nota: El puerto por defecto en bin/www es 3000, cámbialo si es necesario.
-    const baseUrl = 'http://localhost:3001';
+    const baseUrl = 'http://localhost:3000';
 
     // Endpoint 1: Verificación de estado de salud
     let resHealth = http.get(`${baseUrl}/health`);
