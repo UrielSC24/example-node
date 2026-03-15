@@ -27,13 +27,13 @@ jobs:
       - name: Install dependencies
         run: npm install
 
+      # CORRECCIÓN: Usamos npm test en lugar de npx jest para evitar errores de permisos
       - name: Run Jest tests
-        run: npx jest
+        run: npm test
 
   # --- JOB 2: PRUEBAS DE CARGA (K6) ---
   performance_test:
     name: Ejecución de Pruebas de Carga
-    # Nota: Este job requiere que 'test' (o Analysis-SAST si lo tienes) finalice exitosamente
     needs: test 
     runs-on: ubuntu-latest
     steps:
@@ -45,7 +45,6 @@ jobs:
         with:
           filename: k6_pruebas.js
           flags: --out cloud
-          # Implementación del secreto dinámico
           token: ${{ secrets.K6_CLOUD_TOKEN }} 
         env:
           # Estrategia de doble validación para eliminar intermitencia
