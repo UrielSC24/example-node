@@ -58,7 +58,6 @@ jobs:
   # ---------------------------------------------------
   sonarQube-analysis:
     name: Análisis SAST
-    # Se ejecuta solo si las pruebas de carga (Fase 2) terminan correctamente
     needs: performance_test 
     runs-on: ubuntu-latest
     steps:
@@ -76,3 +75,70 @@ jobs:
           args: >
             -Dsonar.projectKey=node-proyect
             -Dsonar.qualitygate.wait=true
+
+  # ---------------------------------------------------
+  # FASE 4: Empaquetado Docker (GHCR)
+  # ---------------------------------------------------
+  docker-build:
+    name: Empaquetado Docker (GHCR)
+    # Se adapta para depender de los jobs previos de tu flujo
+    needs: [performance_test, sonarQube-analysis]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write 
+    steps:
+      - name: Checkout repositorio
+        uses: actions/checkout@v4
+
+      - name: Iniciar sesión en GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Convertir nombre de repo a minúsculas para Docker
+        run: echo "REPO_LC=${GITHUB_REPOSITORY,,}" >> ${GITHUB_ENV}
+
+      - name: Construir y subir imagen Docker
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          push: true
+          tags: ghcr.io/${{ env.REPO_LC }}:latest
+
+  # ---------------------------------------------------
+  # FASE 5: Despliegue Continuo (CD) vía Bastion Host
+  # ---------------------------------------------------
+  deploy:
+    name: Despliegue en Producción
+    needs: docker-build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Conexión SSH y Despliegue Docker
+        uses: appleboy/ssh-action@v1.0.3
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          REPO_NAME: ${{ github.repository }}
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USERNAME }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          proxy_host: ${{ secrets.PROXY_HOST }}
+          proxy_username: ${{ secrets.PROXY_USERNAME }}
+          proxy_key: ${{ secrets.SSH_PRIVATE_KEY }}
+          envs: GH_TOKEN, REPO_NAME
+          script: |
+            # 1. Convertir nombre del repo a minúsculas
+            REPO_LC=$(echo "$REPO_NAME" | tr '[:upper:]' '[:lower:]')            
+            # 2. Autenticarse en el registro de GitHub
+            echo $GH_TOKEN | sudo docker login ghcr.io -u ${{ github.actor }} --password-stdin
+            
+            # 3. Limpiar versión anterior
+            sudo docker stop app-node-prod || true
+            sudo docker rm app-node-prod || true
+            
+            # 4. Descargar nueva versión y ejecutar
+            sudo docker pull ghcr.io/$REPO_LC:latest
+            sudo docker run -d -p 3000:3000 --name app-node-prod ghcr.io/$REPO_LC:latest
