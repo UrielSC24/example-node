@@ -10,6 +10,9 @@ on:
     branches: [ "main" ]
 
 jobs:
+  # ---------------------------------------------------
+  # FASE 1: Pruebas Unitarias
+  # ---------------------------------------------------
   test:
     runs-on: ubuntu-latest
     strategy:
@@ -27,11 +30,12 @@ jobs:
       - name: Install dependencies
         run: npm install
 
-      # CORRECCIÓN: Usamos npm test en lugar de npx jest para evitar errores de permisos
       - name: Run Jest tests
         run: npm test
 
-  # --- JOB 2: PRUEBAS DE CARGA (K6) ---
+  # ---------------------------------------------------
+  # FASE 2: Pruebas de Carga (K6)
+  # ---------------------------------------------------
   performance_test:
     name: Ejecución de Pruebas de Carga
     needs: test 
@@ -47,5 +51,28 @@ jobs:
           flags: --out cloud
           token: ${{ secrets.K6_CLOUD_TOKEN }} 
         env:
-          # Estrategia de doble validación para eliminar intermitencia
           K6_CLOUD_TOKEN: ${{ secrets.K6_CLOUD_TOKEN }}
+
+  # ---------------------------------------------------
+  # FASE 3: Análisis Estático (SAST)
+  # ---------------------------------------------------
+  sonarQube-analysis:
+    name: Análisis SAST
+    # Se ejecuta solo si las pruebas de carga (Fase 2) terminan correctamente
+    needs: performance_test 
+    runs-on: ubuntu-latest
+    steps:
+      - name: Clonación del repositorio (Checkout)
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 
+          
+      - name: Ejecución de Escáner SonarQube
+        uses: SonarSource/sonarqube-scan-action@v6
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+          SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }}
+        with:
+          args: >
+            -Dsonar.projectKey=node-proyect
+            -Dsonar.qualitygate.wait=true
