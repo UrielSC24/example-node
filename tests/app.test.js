@@ -1,6 +1,7 @@
 const request = require('supertest');
 const app = require('../app');
 const { calculateValue } = require('../src/logic');
+const client = require('prom-client');
 
 describe('Suite de Pruebas de Calidad de Software', () => {
 
@@ -45,6 +46,16 @@ describe('Suite de Pruebas de Calidad de Software', () => {
             const response = await request(app).get('/metrics');
             expect(response.statusCode).toBe(200);
             expect(response.headers['content-type']).toMatch(/text\/plain/);
+        });
+
+        test('GET /metrics (Error) - Manejo de errores en métricas', async () => {
+            const spy = jest.spyOn(client.register, 'metrics').mockImplementationOnce(() => {
+                throw new Error('Test Error');
+            });
+            const response = await request(app).get('/metrics');
+            expect(response.statusCode).toBe(500);
+            expect(response.text).toBe('Test Error');
+            spy.mockRestore();
         });
 
         test('GET /items - Estructura de inventario', () => 
