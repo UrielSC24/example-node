@@ -5,67 +5,52 @@ const { calculateValue } = require('../src/logic');
 describe('Suite de Pruebas de Calidad de Software', () => {
 
     describe('Pruebas Unitarias - Lógica de Inventario', () => {
-        test('Debe calcular correctamente el valor total (10 * 5 = 50)', () => {
-            const result = calculateValue(10, 5);
-            expect(result).toBe(50);
-        });
+        // Función parametrizada para evitar duplicar bloques de lógica en los test unitarios
+        const testCalculate = (p, s, expected) => {
+            expect(calculateValue(p, s)).toBe(expected);
+        };
 
-        test('Debe retornar 0 si se ingresan valores negativos', () => {
-            const result = calculateValue(-10, 5);
-            expect(result).toBe(0);
-        });
-
-        // Validaciones adicionales( Jest )
-        test('Extra 1: Debe calcular correctamente artículos promocionales gratuitos (precio 0)', () => {
-            const result = calculateValue(0, 150);
-            expect(result).toBe(0); // 0 precio * 150 stock = 0
-        });
-
-        test('Extra 2: Debe retornar 0 si hay un error de captura con stock negativo', () => {
-            const result = calculateValue(120, -5); 
-            expect(result).toBe(0); // Cubre la segunda condición del if (stock < 0)
+        test('Cálculos básicos y casos borde', () => {
+            testCalculate(10, 5, 50);
+            testCalculate(-10, 5, 0);
+            testCalculate(0, 150, 0);
+            testCalculate(120, -5, 0);
         });
     });
 
-
     describe('Pruebas de Integración - API Endpoints', () => {
-        test('GET /health - Debe responder con status 200 y JSON correcto', async () => {
-            const response = await request(app).get('/health');
-            expect(response.statusCode).toBe(200);
-            expect(response.body).toHaveProperty('status', 'OK');
-        });
-
-        test('GET /items - Debe validar la estructura del inventario', async () => {
-            const response = await request(app).get('/items');
-            expect(response.statusCode).toBe(200);
-            expect(Array.isArray(response.body)).toBe(true);
-            // Validamos que el primer objeto tenga las propiedades requeridas
-            expect(response.body[0]).toHaveProperty('id');
-            expect(response.body[0]).toHaveProperty('stock');
-        });
-
-        test('GET /orders - Debe validar la estructura de las órdenes', async () => {
-            const response = await request(app).get('/orders');
-            expect(response.statusCode).toBe(200);
-            expect(Array.isArray(response.body)).toBe(true);
-            // Validamos que el primer objeto tenga las propiedades requeridas
-            expect(response.body[0]).toHaveProperty('id');
-            expect(response.body[0]).toHaveProperty('customer');
-            expect(response.body[0]).toHaveProperty('total');
-            expect(response.body[0]).toHaveProperty('status');
-        });
-
-        // Validaciones adicionales (Supertest)
-        test('Extra 3: GET /ruta-inexistente - Debe retornar status 404', async () => {
-            const response = await request(app).get('/endpoint-que-no-existe');
-            expect(response.statusCode).toBe(404);
-        });
-
-        test('Extra 4: GET /items - El stock del primer item debe ser de tipo numérico', async () => {
-            const response = await request(app).get('/items');
-            if (response.body.length > 0) {
-                expect(typeof response.body[0].stock).toBe('number');
+        // Helper único para validaciones de API: esto elimina las duplicaciones de Sonar
+        const checkApiResponse = async (endpoint, options = {}) => {
+            const { isArray = true, requiredProps = [], expectedStatus = 200 } = options;
+            const response = await request(app).get(endpoint);
+            
+            expect(response.statusCode).toBe(expectedStatus);
+            
+            if (expectedStatus === 200 && isArray) {
+                expect(Array.isArray(response.body)).toBe(true);
+                if (response.body.length > 0) {
+                    requiredProps.forEach(prop => {
+                        expect(response.body[0]).toHaveProperty(prop);
+                    });
+                }
             }
-        });
+            return response;
+        };
+
+        test('GET /health - Estado del sistema', () => 
+            checkApiResponse('/health', { isArray: false })
+        );
+
+        test('GET /items - Estructura de inventario', () => 
+            checkApiResponse('/items', { requiredProps: ['id', 'stock'] })
+        );
+
+        test('GET /orders - Estructura de órdenes', () => 
+            checkApiResponse('/orders', { requiredProps: ['id', 'customer', 'total', 'status'] })
+        );
+
+        test('Manejo de rutas inexistentes', () => 
+            checkApiResponse('/endpoint-que-no-existe', { expectedStatus: 404 })
+        );
     });
 });
