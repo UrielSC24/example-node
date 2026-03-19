@@ -36,4 +36,13 @@ export default function loadTest() {
     });
 
     sleep(1);
+
+    // Endpoint 3: Órdenes
+    let resOrders = http.get(`${baseUrl}/orders`);
+    check(resOrders, {
+        'Orders endpoint es status 200': (r) => r.status === 200,
+        'Orders retorna datos': (r) => r.body.length > 0,
+    });
+
+    sleep(1);
 }
