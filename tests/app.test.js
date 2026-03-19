@@ -41,6 +41,12 @@ describe('Suite de Pruebas de Calidad de Software', () => {
             checkApiResponse('/health', { isArray: false })
         );
 
+        test('GET /metrics - Obtención de métricas de Prometheus', async () => {
+            const response = await request(app).get('/metrics');
+            expect(response.statusCode).toBe(200);
+            expect(response.headers['content-type']).toMatch(/text\/plain/);
+        });
+
         test('GET /items - Estructura de inventario', () => 
             checkApiResponse('/items', { requiredProps: ['id', 'stock'] })
         );
@@ -48,6 +54,12 @@ describe('Suite de Pruebas de Calidad de Software', () => {
         test('GET /orders - Estructura de órdenes', () => 
             checkApiResponse('/orders', { requiredProps: ['id', 'customer', 'total', 'status'] })
         );
+
+        test('GET /users - Respuesta de recurso de usuarios', async () => {
+            const response = await request(app).get('/users');
+            expect(response.statusCode).toBe(200);
+            expect(response.text).toBe('respond with a resource');
+        });
 
         test('Manejo de rutas inexistentes', () => 
             checkApiResponse('/endpoint-que-no-existe', { expectedStatus: 404 })
