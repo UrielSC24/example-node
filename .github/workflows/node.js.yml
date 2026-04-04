@@ -6,7 +6,7 @@
 # ante cambios en la rama principal (main) mediante eventos de push o pull request
 #
 # El flujo está estructurado en múltiples fases encadenadas que garantizan la
-# calidad, seguridad, rendimiento y despliegue automatizado de una aplicación
+# calidad, seguridad, rendimiento y despliegue automatizado de una aplicación en
 # Node.js.
 #
 # ------------------------------------------------------------------------------
@@ -46,6 +46,7 @@ jobs:
 
       - name: Install dependencies
         run: npm install
+
 
       - name: Run Jest tests
         run: npm test
