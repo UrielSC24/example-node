@@ -174,7 +174,7 @@ jobs:
     needs: docker-build
     runs-on: ubuntu-latest
     steps:
-      # ---DESPLEGAR EN EL ENTORNO INACTIVO (SERVIDOR PRIVADO) ---
+      # --- PASO 1: DESPLEGAR EN EL ENTORNO INACTIVO (SERVIDOR PRIVADO) ---
       - name: 1. Levantar contenedor paralelo en Servidor Privado
         uses: appleboy/ssh-action@v1.0.3
         env:
@@ -191,14 +191,14 @@ jobs:
           script: |
             echo "--- PREPARANDO CONTENEDOR DOCKER ---"
             
-            # 1. Leer qué contenedor está activo actualmente
-            if [ -f ~/current_deploy.env ]; then
-              source ~/current_deploy.env
+            # 1. Leer qué contenedor está activo actualmente (Ruta Absoluta)
+            if [ -f /home/g2022371107/current_deploy.env ]; then
+              source /home/g2022371107/current_deploy.env
             else
               CURRENT_COLOR="Green"
             fi
             
-            # 2. Invertir la lógica: Asignamos puertos fijos para evitar colisiones
+            # 2. Invertir la lógica: Asignamos puertos fijos
             if [ "$CURRENT_COLOR" == "Blue" ]; then
               TARGET_COLOR="Green"
               TARGET_PORT="3001"
@@ -207,12 +207,12 @@ jobs:
               TARGET_PORT="3000"
             fi
             
-            echo "El tráfico actual está en $CURRENT_COLOR. Actualizando el entorno inactivo: $TARGET_COLOR (Puerto $TARGET_PORT)..."
+            echo "Tráfico actual: $CURRENT_COLOR. Actualizando a: $TARGET_COLOR (Puerto $TARGET_PORT)..."
             
             REPO_LC=$(echo "$REPO_NAME" | tr '[:upper:]' '[:lower:]')
             echo $GH_TOKEN | sudo docker login ghcr.io -u ${{ github.actor }} --password-stdin
             
-            # 3. Limpiar SOLO el contenedor inactivo (El activo sigue sirviendo a los usuarios)
+            # 3. Limpiar SOLO el contenedor inactivo
             sudo docker stop app-node-$TARGET_COLOR || true
             sudo docker rm app-node-$TARGET_COLOR || true
             
@@ -220,8 +220,8 @@ jobs:
             sudo docker pull ghcr.io/$REPO_LC:latest
             sudo docker run -d -p $TARGET_PORT:3000 --name app-node-$TARGET_COLOR ghcr.io/$REPO_LC:latest
             
-            # 5. Guardar el estado para la próxima vez
-            echo "CURRENT_COLOR=$TARGET_COLOR" > ~/current_deploy.env
+            # 5. Guardar el estado (Ruta Absoluta)
+            echo "CURRENT_COLOR=$TARGET_COLOR" | tee /home/g2022371107/current_deploy.env
 
       # --- PASO 2: CONMUTAR EL TRÁFICO (SERVIDOR PÚBLICO) ---
       - name: 2. Conmutación Blue-Green en Nginx Público
@@ -231,8 +231,9 @@ jobs:
           username: ${{ secrets.PROXY_USERNAME }}
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           script: |
-            echo "--- CAMBIANDO SEMÁFORO EN NGINX ---"            
-            # USAMOS LA RUTA ABSOLUTA DE TU USUARIO
+            echo "--- CAMBIANDO SEMÁFORO EN NGINX ---"
+            
+            # 1. Leer estado actual (Ruta Absoluta)
             if [ -f /home/g2022371107/current_deploy.env ]; then
               source /home/g2022371107/current_deploy.env
             else
@@ -251,22 +252,23 @@ jobs:
             export APP_TARGET_PORT=$TARGET_PORT
             export DEPLOYMENT_COLOR=$TARGET_COLOR
             
-            echo "Enrutando usuarios hacia la nueva versión en: $TARGET_COLOR ($APP_TARGET_IP:$TARGET_PORT)"
+            echo "Enrutando usuarios hacia: $TARGET_COLOR ($APP_TARGET_IP:$TARGET_PORT)"
             
-            # USAMOS LA RUTA ABSOLUTA PARA LA PLANTILLA
-            cat /home/g2022371107/nginx.conf.template | envsubst '${APP_TARGET_IP} ${APP_TARGET_PORT} ${DEPLOYMENT_COLOR}' | sudo tee /etc/nginx/conf.d/default.conf > /dev/null
+            # 2. COMANDO DE ESCRITURA BLINDADO (Usa sudo -E para mantener variables y escribir con permisos)
+            sudo -E bash -c "envsubst < /home/g2022371107/nginx.conf.template > /etc/nginx/conf.d/default.conf"
             
+            # 3. Validar y Recargar Nginx
             sudo nginx -t
             if [ $? -eq 0 ]; then
               sudo systemctl reload nginx
-              # USAMOS LA RUTA ABSOLUTA PARA GUARDAR EL ESTADO
+              # Guardar el nuevo estado (Ruta Absoluta)
               echo "CURRENT_COLOR=$TARGET_COLOR" | sudo tee /home/g2022371107/current_deploy.env > /dev/null
               echo "¡Conmutación a $TARGET_COLOR exitosa! Zero-Downtime logrado."
             else
               echo "Error crítico en la sintaxis de Nginx."
               exit 1
             fi
-
+            
 # ------------------------------------------------------------------------------
 #
 # CONCLUSIÓN
