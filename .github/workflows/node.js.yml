@@ -2,12 +2,12 @@
 # DESCRIPCIÓN GENERAL DEL PIPELINE CI/CD:
 #
 # Este pipeline implementa un flujo completo de Integración Continua y 
-# Despliegue Continuo (CI/CD) en GitHub Actions, el cual se activa automáticamente
+# Despliegue Continuo (CI/CD) en GitHub Actions, el cual se activa automáticamente,
 # ante cambios en la rama principal (main) mediante eventos de push o pull request
 #
 # El flujo está estructurado en múltiples fases encadenadas que garantizan la
 # calidad, seguridad, rendimiento y despliegue automatizado de una aplicación en
-# Node.js
+# Node.js.
 #
 # ------------------------------------------------------------------------------
 
