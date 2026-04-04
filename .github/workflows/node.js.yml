@@ -195,10 +195,9 @@ jobs:
           script: |
             echo "--- PREPARANDO CONTENEDOR DOCKER ---"
             
-            # 1. Leer qué contenedor está activo actualmente (Ruta Absoluta)
-            if [ -f /home/g2022371107/current_deploy.env ]; then
-              source /home/g2022371107/current_deploy.env
-            else
+            # 1. Leer estado actual (Usando SUDO para evitar bloqueo de permisos)
+            CURRENT_COLOR=$(sudo cat /home/g2022371107/current_deploy.env 2>/dev/null | grep CURRENT_COLOR | cut -d'=' -f2 | tr -d '[:space:]')
+            if [ -z "$CURRENT_COLOR" ]; then
               CURRENT_COLOR="Green"
             fi
             
@@ -226,7 +225,7 @@ jobs:
             
             # 5. Guardar el estado (Ruta Absoluta) con permisos
             echo "CURRENT_COLOR=$TARGET_COLOR" | sudo tee /home/g2022371107/current_deploy.env
-            
+
       # --- PASO 2: CONMUTAR EL TRÁFICO (SERVIDOR PÚBLICO) ---
       - name: 2. Conmutación Blue-Green en Nginx Público
         uses: appleboy/ssh-action@v1.0.3
@@ -237,10 +236,9 @@ jobs:
           script: |
             echo "--- CAMBIANDO SEMÁFORO EN NGINX ---"
             
-            # 1. Leer estado actual (Ruta Absoluta)
-            if [ -f /home/g2022371107/current_deploy.env ]; then
-              source /home/g2022371107/current_deploy.env
-            else
+            # 1. Leer estado actual (Usando SUDO)
+            CURRENT_COLOR=$(sudo cat /home/g2022371107/current_deploy.env 2>/dev/null | grep CURRENT_COLOR | cut -d'=' -f2 | tr -d '[:space:]')
+            if [ -z "$CURRENT_COLOR" ]; then
               CURRENT_COLOR="Green"
             fi
             
