@@ -1,5 +1,5 @@
 # ==============================================================================
-# DESCRIPCIÓN GENERAL DEL PIPELINE CI/CD
+# DESCRIPCIÓN GENERAL DEL PIPELINE CI/CD:
 #
 # Este pipeline implementa un flujo completo de Integración Continua y 
 # Despliegue Continuo (CI/CD) en GitHub Actions, el cual se activa automáticamente
