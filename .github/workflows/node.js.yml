@@ -220,9 +220,9 @@ jobs:
             sudo docker pull ghcr.io/$REPO_LC:latest
             sudo docker run -d -p $TARGET_PORT:3000 --name app-node-$TARGET_COLOR ghcr.io/$REPO_LC:latest
             
-            # 5. Guardar el estado (Ruta Absoluta)
-            echo "CURRENT_COLOR=$TARGET_COLOR" | tee /home/g2022371107/current_deploy.env
-
+            # 5. Guardar el estado (Ruta Absoluta) con permisos
+            echo "CURRENT_COLOR=$TARGET_COLOR" | sudo tee /home/g2022371107/current_deploy.env
+            
       # --- PASO 2: CONMUTAR EL TRÁFICO (SERVIDOR PÚBLICO) ---
       - name: 2. Conmutación Blue-Green en Nginx Público
         uses: appleboy/ssh-action@v1.0.3
