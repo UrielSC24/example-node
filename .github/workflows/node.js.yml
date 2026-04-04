@@ -2,12 +2,12 @@
 # DESCRIPCIÓN GENERAL DEL PIPELINE CI/CD:
 #
 # Este pipeline implementa un flujo completo de Integración Continua y 
-# Despliegue Continuo (CI/CD) en GitHub Actions, el cual se activa automáticamente,
-# ante cambios en la rama principal (main) mediante eventos de push o pull request,
+# Despliegue Continuo (CI/CD) en GitHub Actions, el cual se activa automáticamente
+# ante cambios en la rama principal (main) mediante eventos de push o pull request
 #
 # El flujo está estructurado en múltiples fases encadenadas que garantizan la
 # calidad, seguridad, rendimiento y despliegue automatizado de una aplicación en
-# Node.js.
+# Node.js
 #
 # ------------------------------------------------------------------------------
 
@@ -23,7 +23,7 @@ jobs:
 
 # ------------------------------------------------------------------------------
 #
-# FASE 1: PRUEBAS UNITARIAS
+# FASE 1: PRUEBAS UNITARIAS:
 # En esta fase se valida el correcto funcionamiento del código ejecutando pruebas
 # automatizadas con Jest en múltiples versiones de Node.js. Se instalan las
 # dependencias del proyecto y se ejecutan los tests para asegurar compatibilidad
@@ -56,7 +56,7 @@ jobs:
 
 # ------------------------------------------------------------------------------
 #
-# FASE 2: PRUEBAS DE CARGA
+# FASE 2: PRUEBAS DE CARGA:
 # Una vez superadas las pruebas unitarias, se ejecutan pruebas de rendimiento
 # utilizando k6. Estas pruebas simulan carga sobre la aplicación y permiten
 # analizar su comportamiento bajo condiciones de estrés. Los resultados se envían
@@ -82,7 +82,7 @@ jobs:
 
 # ------------------------------------------------------------------------------
 #
-# FASE 3: ANÁLISIS ESTÁTICO Y SEGURIDAD (SAST + SCA)
+# FASE 3: ANÁLISIS ESTÁTICO Y SEGURIDAD (SAST + SCA):
 # En esta fase se realiza un análisis profundo del código fuente utilizando
 # SonarQube. Se evalúan métricas de calidad, cobertura de pruebas, detección de
 # vulnerabilidades y malas prácticas. También se ejecuta una auditoría de
@@ -125,7 +125,7 @@ jobs:
 
 # ------------------------------------------------------------------------------
 #
-# FASE 4: EMPAQUETADO EN CONTENEDOR
+# FASE 4: EMPAQUETADO EN CONTENEDOR:
 # Después de validar la calidad del software, se construye una imagen Docker de
 # la aplicación. Esta imagen se etiqueta y se publica en GitHub Container
 # Registry (GHCR), dejándola disponible para su despliegue en entornos remotos.
@@ -163,7 +163,7 @@ jobs:
 
 # ------------------------------------------------------------------------------
 #
-# FASE 5: DESPLIEGUE BLUE-GREEN (ZERO-DOWNTIME)
+# FASE 5: DESPLIEGUE BLUE-GREEN (ZERO-DOWNTIME):
 # Finalmente, se realiza un despliegue automatizado utilizando la estrategia
 # Blue-Green. Se levanta una nueva versión de la aplicación en paralelo dentro
 # de un servidor privado sin afectar la versión actual en producción.
@@ -273,7 +273,7 @@ jobs:
             
 # ------------------------------------------------------------------------------
 #
-# CONCLUSIÓN
+# CONCLUSIÓN:
 # Este pipeline automatiza completamente el ciclo de vida del software, integrando
 # pruebas, análisis de seguridad, construcción de artefactos y despliegue
 # continuo, asegurando entregas rápidas, seguras y confiables.
